@@ -1,0 +1,362 @@
+{
+  "version": 1,
+  "title": "Julia — vivid voyage",
+  "duration": 261,
+  "soundcloud": "https://soundcloud.com/hewmorist/piano-and-strings",
+  "segments": [
+    {
+      "time": 0,
+      "effect": "procedural",
+      "generator": "julia",
+      "seed": 219,
+      "parameter": [
+        -0.8,
+        0.156
+      ],
+      "palette": "neon",
+      "center": [
+        0,
+        0
+      ],
+      "zoom": {
+        "from": 3.2,
+        "to": 1.3
+      },
+      "iterations": {
+        "from": 240,
+        "to": 350
+      },
+      "quality": 256,
+      "transition": 0,
+      "vibrance": 0.9
+    },
+    {
+      "time": 22,
+      "effect": "procedural",
+      "generator": "julia",
+      "seed": 219,
+      "parameter": [
+        -0.8,
+        0.156
+      ],
+      "palette": "neon",
+      "center": {
+        "from": [
+          0,
+          0
+        ],
+        "to": [
+          -0.65,
+          0
+        ]
+      },
+      "zoom": {
+        "from": 1.3,
+        "to": 0.55
+      },
+      "iterations": {
+        "from": 350,
+        "to": 520
+      },
+      "quality": 256,
+      "transition": 0,
+      "vibrance": 0.9
+    },
+    {
+      "time": 44,
+      "effect": "procedural",
+      "generator": "julia",
+      "seed": 219,
+      "parameter": [
+        -0.8,
+        0.156
+      ],
+      "palette": "neon",
+      "center": {
+        "from": [
+          -0.65,
+          0
+        ],
+        "to": [
+          -0.4,
+          0.12
+        ]
+      },
+      "zoom": {
+        "from": 0.55,
+        "to": 0.25
+      },
+      "iterations": {
+        "from": 520,
+        "to": 650
+      },
+      "quality": 256,
+      "transition": 0,
+      "vibrance": 0.9
+    },
+    {
+      "time": 66,
+      "effect": "procedural",
+      "generator": "julia",
+      "seed": 219,
+      "parameter": [
+        -0.8,
+        0.156
+      ],
+      "palette": "neon",
+      "center": [
+        -0.4,
+        0.12
+      ],
+      "zoom": {
+        "from": 0.25,
+        "to": 3.2
+      },
+      "iterations": {
+        "from": 650,
+        "to": 240
+      },
+      "quality": 256,
+      "transition": 0,
+      "vibrance": 0.9
+    },
+    {
+      "time": 88,
+      "effect": "procedural",
+      "generator": "julia",
+      "seed": 219,
+      "parameter": [
+        -0.4,
+        0.6
+      ],
+      "palette": "ocean",
+      "center": [
+        0,
+        0
+      ],
+      "zoom": {
+        "from": 3.2,
+        "to": 0.8
+      },
+      "iterations": {
+        "from": 250,
+        "to": 500
+      },
+      "quality": 256,
+      "transition": 3.5,
+      "vibrance": 0.9
+    },
+    {
+      "time": 110,
+      "effect": "procedural",
+      "generator": "julia",
+      "seed": 219,
+      "parameter": [
+        -0.4,
+        0.6
+      ],
+      "palette": "ocean",
+      "center": {
+        "from": [
+          0,
+          0
+        ],
+        "to": [
+          0.55,
+          -0.3
+        ]
+      },
+      "zoom": {
+        "from": 0.8,
+        "to": 0.35
+      },
+      "iterations": {
+        "from": 500,
+        "to": 650
+      },
+      "quality": 256,
+      "transition": 0,
+      "vibrance": 0.9
+    },
+    {
+      "time": 132,
+      "effect": "procedural",
+      "generator": "julia",
+      "seed": 219,
+      "parameter": [
+        0.285,
+        0.01
+      ],
+      "palette": "aurora",
+      "center": [
+        0,
+        0
+      ],
+      "zoom": {
+        "from": 3.2,
+        "to": 0.8
+      },
+      "iterations": {
+        "from": 230,
+        "to": 480
+      },
+      "quality": 256,
+      "transition": 3.5,
+      "vibrance": 0.9
+    },
+    {
+      "time": 154,
+      "effect": "procedural",
+      "generator": "julia",
+      "seed": 219,
+      "parameter": [
+        0.285,
+        0.01
+      ],
+      "palette": "aurora",
+      "center": {
+        "from": [
+          0,
+          0
+        ],
+        "to": [
+          0.35,
+          0.55
+        ]
+      },
+      "zoom": {
+        "from": 0.8,
+        "to": 0.35
+      },
+      "iterations": {
+        "from": 480,
+        "to": 650
+      },
+      "quality": 256,
+      "transition": 0,
+      "vibrance": 0.9
+    },
+    {
+      "time": 176,
+      "effect": "procedural",
+      "generator": "julia",
+      "seed": 219,
+      "parameter": [
+        0.285,
+        0.01
+      ],
+      "palette": "aurora",
+      "center": {
+        "from": [
+          0.35,
+          0.55
+        ],
+        "to": [
+          0,
+          0
+        ]
+      },
+      "zoom": {
+        "from": 0.35,
+        "to": 3.2
+      },
+      "iterations": {
+        "from": 650,
+        "to": 230
+      },
+      "quality": 256,
+      "transition": 0,
+      "vibrance": 0.9
+    },
+    {
+      "time": 198,
+      "effect": "procedural",
+      "generator": "julia",
+      "seed": 219,
+      "parameter": [
+        -0.835,
+        -0.2321
+      ],
+      "palette": "ember",
+      "center": [
+        0,
+        0
+      ],
+      "zoom": {
+        "from": 3.2,
+        "to": 0.65
+      },
+      "iterations": {
+        "from": 240,
+        "to": 500
+      },
+      "quality": 256,
+      "transition": 3.5,
+      "vibrance": 0.9
+    },
+    {
+      "time": 220,
+      "effect": "procedural",
+      "generator": "julia",
+      "seed": 219,
+      "parameter": [
+        -0.835,
+        -0.2321
+      ],
+      "palette": "ember",
+      "center": {
+        "from": [
+          0,
+          0
+        ],
+        "to": [
+          0.5,
+          0.2
+        ]
+      },
+      "zoom": {
+        "from": 0.65,
+        "to": 0.4
+      },
+      "iterations": {
+        "from": 500,
+        "to": 650
+      },
+      "quality": 256,
+      "transition": 0,
+      "vibrance": 0.9
+    },
+    {
+      "time": 242,
+      "effect": "procedural",
+      "generator": "julia",
+      "seed": 219,
+      "parameter": [
+        -0.835,
+        -0.2321
+      ],
+      "palette": "ember",
+      "center": {
+        "from": [
+          0.5,
+          0.2
+        ],
+        "to": [
+          0,
+          0
+        ]
+      },
+      "zoom": {
+        "from": 0.4,
+        "to": 2.8
+      },
+      "iterations": {
+        "from": 650,
+        "to": 250
+      },
+      "quality": 256,
+      "transition": 0,
+      "vibrance": 0.9
+    }
+  ]
+}

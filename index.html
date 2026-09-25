@@ -1,0 +1,380 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Julia Voyage — Animate</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:#101115;color:#f5f0e6}*{box-sizing:border-box}body{margin:0;min-height:100vh}main{max-width:1120px;margin:auto;padding:20px 22px 30px}header{display:flex;justify-content:space-between;align-items:baseline;gap:1rem}h1{font-size:clamp(2rem,5vw,3.4rem);margin:0;font-weight:650;letter-spacing:-.045em}header span,.hint{color:#a4a5ac;font-size:.9rem}canvas{display:block;width:min(100%,min(70vh,880px));aspect-ratio:1;margin:16px auto;border-radius:12px;background:#171923;box-shadow:0 18px 65px #0008}.panel{max-width:880px;margin:auto}.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}button,.file{font:inherit;background:#252832;color:#f5f0e6;border:1px solid #555b66;border-radius:10px;padding:.68rem .9rem;cursor:pointer}button:hover,.file:hover{background:#333947}button.primary{background:#f0dcc1;color:#15171c;border-color:#f0dcc1;font-weight:700;min-width:84px}button:disabled{opacity:.5;cursor:wait}input[type=file]{display:none}input[type=range]{flex:1;min-width:120px;accent-color:#e8bd8f}#clock{font-variant-numeric:tabular-nums;min-width:105px;text-align:right}#status{min-height:1.6em;color:#b8bdc9;font-size:.9rem;margin:10px 0}#status.error{color:#ffc0aa}.markers{position:relative;height:18px;margin:0 103px 3px 93px}.mark{position:absolute;top:0;width:3px;height:12px;background:#f0dcc1;border-radius:3px;transform:translateX(-50%)}details{border-top:1px solid #383b44;margin-top:16px;padding:13px 0}summary{cursor:pointer;color:#ded5c9}textarea{width:100%;height:290px;margin:12px 0 8px;background:#161820;border:1px solid #4a4e59;border-radius:8px;color:#eaeef0;padding:14px;font:13px/1.5 ui-monospace,SFMono-Regular,monospace;resize:vertical}.hint{line-height:1.5}.soundcloud{position:absolute;left:-10000px;width:300px;height:166px;overflow:hidden}#sc{width:300px;height:166px;border:0}@media(max-width:600px){main{padding:12px}.markers{margin-left:84px;margin-right:87px}button,.file{padding:.58rem .7rem}#clock{min-width:86px;font-size:.85rem}}
+/* Presentation surface: one visible control beneath the artwork. */
+body{background:#090b13}main{max-width:none;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:18px}canvas{width:min(92vw,72vh,880px);margin:0;box-shadow:0 18px 75px #000a}.panel{width:auto;max-width:none;margin:18px 0 0}.panel>.row:first-child{justify-content:center}#play{font-size:1.1rem;min-width:160px;padding:.8rem 1.35rem}header,#seek,#clock,#markers,.panel>.row:not(:first-child),#status,details,.hint{display:none}
+</style></head><body><main><header><h1>Animate</h1><span>0.7 · Vivid Julia</span></header>
+<canvas id="stage" width="800" height="800" aria-label="Animated artwork"></canvas>
+<div class="panel"><div class="row"><button id="play" class="primary">▶ Play</button><input id="seek" aria-label="Seek" type="range" min="0" max="360" step="0.01" value="0"><span id="clock">0:00 / 0:36</span></div><div id="markers" class="markers"></div><div class="row"><label class="file">Load JSON<input id="jsonFile" type="file" accept=".json,application/json"></label><label class="file">Add images<input id="images" type="file" accept="image/*" multiple></label><button id="sample">Demo</button><button id="download">Save JSON</button><span id="segment" class="hint"></span></div><p id="status" role="status">Built-in demo ready. Press Play.</p>
+<details><summary>Edit timeline JSON</summary><textarea id="editor" spellcheck="false" aria-label="Timeline JSON"></textarea><div class="row"><button id="apply">Apply JSON</button><span class="hint">Edit markers, images, effects and seeds; then apply.</span></div></details>
+<p class="hint">Procedural generators: life, fractal, harmonics, kaleido, lorenz, mandelbrot, julia, burningship. Fractal segments support vibrance from 0 to 1; scrub to explore.</p></div>
+<div class="soundcloud"><iframe id="sc" title="SoundCloud audio player" allow="autoplay" src="about:blank"></iframe></div></main>
+<script src="https://w.soundcloud.com/player/api.js"></script>
+<script>
+'use strict';
+const $=id=>document.getElementById(id), C=$('stage');let ctx=C.getContext('2d');const W=C.width,H=C.height;
+const defaultConfig={"version":1,"title":"Julia — vivid voyage","duration":261,"soundcloud":"https://soundcloud.com/hewmorist/piano-and-strings","segments":[{"time":0,"effect":"procedural","generator":"julia","seed":219,"parameter":[-0.8,0.156],"palette":"neon","center":[0,0],"zoom":{"from":3.2,"to":1.3},"iterations":{"from":240,"to":350},"quality":256,"transition":0,"vibrance":0.9},{"time":22,"effect":"procedural","generator":"julia","seed":219,"parameter":[-0.8,0.156],"palette":"neon","center":{"from":[0,0],"to":[-0.65,0]},"zoom":{"from":1.3,"to":0.55},"iterations":{"from":350,"to":520},"quality":256,"transition":0,"vibrance":0.9},{"time":44,"effect":"procedural","generator":"julia","seed":219,"parameter":[-0.8,0.156],"palette":"neon","center":{"from":[-0.65,0],"to":[-0.4,0.12]},"zoom":{"from":0.55,"to":0.25},"iterations":{"from":520,"to":650},"quality":256,"transition":0,"vibrance":0.9},{"time":66,"effect":"procedural","generator":"julia","seed":219,"parameter":[-0.8,0.156],"palette":"neon","center":[-0.4,0.12],"zoom":{"from":0.25,"to":3.2},"iterations":{"from":650,"to":240},"quality":256,"transition":0,"vibrance":0.9},{"time":88,"effect":"procedural","generator":"julia","seed":219,"parameter":[-0.4,0.6],"palette":"ocean","center":[0,0],"zoom":{"from":3.2,"to":0.8},"iterations":{"from":250,"to":500},"quality":256,"transition":3.5,"vibrance":0.9},{"time":110,"effect":"procedural","generator":"julia","seed":219,"parameter":[-0.4,0.6],"palette":"ocean","center":{"from":[0,0],"to":[0.55,-0.3]},"zoom":{"from":0.8,"to":0.35},"iterations":{"from":500,"to":650},"quality":256,"transition":0,"vibrance":0.9},{"time":132,"effect":"procedural","generator":"julia","seed":219,"parameter":[0.285,0.01],"palette":"aurora","center":[0,0],"zoom":{"from":3.2,"to":0.8},"iterations":{"from":230,"to":480},"quality":256,"transition":3.5,"vibrance":0.9},{"time":154,"effect":"procedural","generator":"julia","seed":219,"parameter":[0.285,0.01],"palette":"aurora","center":{"from":[0,0],"to":[0.35,0.55]},"zoom":{"from":0.8,"to":0.35},"iterations":{"from":480,"to":650},"quality":256,"transition":0,"vibrance":0.9},{"time":176,"effect":"procedural","generator":"julia","seed":219,"parameter":[0.285,0.01],"palette":"aurora","center":{"from":[0.35,0.55],"to":[0,0]},"zoom":{"from":0.35,"to":3.2},"iterations":{"from":650,"to":230},"quality":256,"transition":0,"vibrance":0.9},{"time":198,"effect":"procedural","generator":"julia","seed":219,"parameter":[-0.835,-0.2321],"palette":"ember","center":[0,0],"zoom":{"from":3.2,"to":0.65},"iterations":{"from":240,"to":500},"quality":256,"transition":3.5,"vibrance":0.9},{"time":220,"effect":"procedural","generator":"julia","seed":219,"parameter":[-0.835,-0.2321],"palette":"ember","center":{"from":[0,0],"to":[0.5,0.2]},"zoom":{"from":0.65,"to":0.4},"iterations":{"from":500,"to":650},"quality":256,"transition":0,"vibrance":0.9},{"time":242,"effect":"procedural","generator":"julia","seed":219,"parameter":[-0.835,-0.2321],"palette":"ember","center":{"from":[0.5,0.2],"to":[0,0]},"zoom":{"from":0.4,"to":2.8},"iterations":{"from":650,"to":250},"quality":256,"transition":0,"vibrance":0.9}]};
+let config=structuredClone(defaultConfig), sources=new Map(), files=new Map(), failed=new Set(),widget=null,widgetReady=false,playing=false,position=0,anchor=0,anchorTime=0,lastPoll=0,waiting=false,ended=false,serial=0;
+let playRequested=false,startProbeTimer=null,lastProbeMs=null,probeStartedAt=0;
+const svg={
+magnet:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800"><defs><radialGradient id="b"><stop stop-color="#343348"/><stop offset="1" stop-color="#111624"/></radialGradient><linearGradient id="m" x2="1" y2="1"><stop stop-color="#e6b498"/><stop offset="1" stop-color="#aa584e"/></linearGradient></defs><path fill="url(#b)" d="M0 0h800v800H0z"/><g fill="none" stroke="#576274" stroke-width="3" opacity=".5"><ellipse cx="400" cy="405" rx="340" ry="205"/><ellipse cx="400" cy="405" rx="280" ry="149"/><ellipse cx="400" cy="405" rx="215" ry="101"/></g><path d="M270 286v241a130 130 0 00260 0V286h-85v241a45 45 0 01-90 0V286z" fill="url(#m)" stroke="#f2d0a9" stroke-width="8"/><path d="M270 285h85v84h-85zm175 0h85v84h-85z" fill="#ece5d4"/><circle cx="400" cy="388" r="7" fill="#ffe6b6"/><text x="400" y="705" fill="#e3d8c2" opacity=".7" font-family="serif" font-size="32" text-anchor="middle">The field is moving</text></svg>`,
+gas:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800"><defs><radialGradient id="b"><stop stop-color="#5c3032"/><stop offset="1" stop-color="#181722"/></radialGradient><linearGradient id="f" x2="1" y2="1"><stop stop-color="#f2bb70"/><stop offset="1" stop-color="#a8483b"/></linearGradient></defs><rect width="800" height="800" fill="url(#b)"/><g stroke="#e5ab79" fill="none" opacity=".35"><circle cx="400" cy="400" r="230"/><circle cx="400" cy="400" r="305"/></g><path d="M310 282h185q26 0 26 26v291q0 26-26 26H310q-26 0-26-26V308q0-26 26-26z" fill="url(#f)" stroke="#f6d39a" stroke-width="8"/><path d="M323 278v-49h115v49m31 6v-39h73" stroke="#f6d39a" fill="none" stroke-width="16" stroke-linejoin="round"/><circle cx="403" cy="436" r="84" fill="none" stroke="#ffdfa4" stroke-width="7" opacity=".8"/><path d="M400 371l-39 72h36l-10 65 57-86h-36l16-51z" fill="#ffebbf"/><text x="400" y="705" fill="#f2d4b4" opacity=".8" font-family="serif" font-size="32" text-anchor="middle">Fuel is transformed</text></svg>`};
+Object.assign(svg,{
+'magnet-bg':`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800"><defs><radialGradient id="a"><stop stop-color="#333345"/><stop offset="1" stop-color="#111624"/></radialGradient></defs><rect width="800" height="800" fill="url(#a)"/><g fill="none" stroke="#8290a3" stroke-width="3" opacity=".36"><ellipse cx="400" cy="405" rx="340" ry="205"/><ellipse cx="400" cy="405" rx="280" ry="149"/><ellipse cx="400" cy="405" rx="215" ry="101"/></g><text x="400" y="705" fill="#e3d8c2" opacity=".7" font-family="serif" font-size="32" text-anchor="middle">Still the same magnet</text></svg>`,
+'magnet-object':`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 420"><defs><linearGradient id="m" x2="1" y2="1"><stop stop-color="#e6b498"/><stop offset="1" stop-color="#aa584e"/></linearGradient></defs><path d="M20 25v242a130 130 0 00260 0V25h-85v242a45 45 0 01-90 0V25z" fill="url(#m)" stroke="#f2d0a9" stroke-width="8"/><path d="M20 24h85v84H20zm175 0h85v84h-85z" fill="#ece5d4"/></svg>`,
+'gas-bg':`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800"><defs><radialGradient id="a"><stop stop-color="#5c3032"/><stop offset="1" stop-color="#181722"/></radialGradient></defs><rect width="800" height="800" fill="url(#a)"/><g stroke="#e5ab79" fill="none" opacity=".35"><circle cx="400" cy="400" r="230"/><circle cx="400" cy="400" r="305"/></g><text x="400" y="705" fill="#f2d4b4" opacity=".8" font-family="serif" font-size="32" text-anchor="middle">Fuel is transformed</text></svg>`,
+'gas-object':`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 450"><defs><linearGradient id="f" x2="1" y2="1"><stop stop-color="#f2bb70"/><stop offset="1" stop-color="#a8483b"/></linearGradient></defs><path d="M55 70h190q25 0 25 26v290q0 26-25 26H55q-25 0-25-26V96q0-26 25-26z" fill="url(#f)" stroke="#f6d39a" stroke-width="8"/><path d="M70 67V20h113v47m36 9V38h55" stroke="#f6d39a" fill="none" stroke-width="15" stroke-linejoin="round"/><circle cx="151" cy="226" r="80" fill="none" stroke="#ffdfa4" stroke-width="7" opacity=".8"/><path d="M150 163l-38 72h35l-9 64 56-86h-36l16-50z" fill="#ffebbf"/></svg>`});
+function setStatus(s,error=false){$('status').textContent=s;$('status').classList.toggle('error',error)}
+function uri(s){return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(s)}
+function imagePath(name){return name.startsWith('asset:')?(svg[name.slice(6)]?uri(svg[name.slice(6)]):null):files.get(name)||name}
+function getImage(name){let key=imagePath(name);if(!key){if(!failed.has(name)){setStatus('Unknown image: '+name,true);failed.add(name)}return null}if(!sources.has(key)){let image=new Image();let item={image,ready:false};sources.set(key,item);image.onload=()=>{item.ready=true;if(!playing)render(position)};image.onerror=()=>{if(!failed.has(name)){setStatus('Could not open image: '+name,true);failed.add(name)}};image.src=key}let x=sources.get(key);return x.ready?x.image:null}
+function validate(d){
+ if(!d||d.version!==1||!Array.isArray(d.segments)||!d.segments.length)throw Error('Expected version 1 with at least one segment.');
+ if(!(Number.isFinite(d.duration)&&d.duration>0))throw Error('duration must be a positive number.');
+ if(d.soundcloud!=null&&typeof d.soundcloud!=='string')throw Error('soundcloud must be a URL string.');
+ let prev=-1;d.segments.forEach((s,i)=>{
+  if(!Number.isFinite(s.time)||s.time<0||s.time<=prev||s.time>=d.duration)throw Error('Segment '+(i+1)+' needs a distinct ascending time before duration.');
+  if(i===0&&s.time!==0)throw Error('First segment must start at 0.');
+  if(!['still','field','ripple','fracture','embers','scene','procedural'].includes(s.effect))throw Error('Unknown effect on segment '+(i+1)+'.');
+  if(s.effect==='procedural'){
+   if(!['life','fractal','harmonics','kaleido','lorenz','mandelbrot','julia','burningship'].includes(s.generator))throw Error('Unknown generator on segment '+(i+1));
+   if(s.grid!==undefined&&(!Number.isInteger(s.grid)||s.grid<16||s.grid>96))throw Error('grid must be 16–96.');
+   if(s.rate!==undefined&&(!Number.isFinite(s.rate)||s.rate<=0||s.rate>12))throw Error('rate must be above 0 and at most 12.');
+   if(s.density!==undefined&&(!Number.isFinite(s.density)||s.density<0||s.density>1))throw Error('density must be 0–1.');
+   if(s.depth!==undefined&&(!Number.isInteger(s.depth)||s.depth<1||s.depth>11))throw Error('depth must be 1–11.');
+   if(s.points!==undefined&&(!Number.isInteger(s.points)||s.points<100||s.points>3000))throw Error('points must be 100–3000.');
+   if(s.folds!==undefined&&(!Number.isInteger(s.folds)||s.folds<3||s.folds>24))throw Error('folds must be 3–24.');
+   for(const [label,spec] of [['rotation',s.rotation],['camera.yaw',s.camera?.yaw],['camera.pitch',s.camera?.pitch]]){
+    if(spec===undefined)continue;
+    if(typeof spec==='number'){if(!Number.isFinite(spec))throw Error(label+' must be finite.');continue}
+    if(!spec||typeof spec!=='object'||!Number.isFinite(spec.start??0)||
+       (spec.end!==undefined&&!Number.isFinite(spec.end))||
+       (spec.speed!==undefined&&(!Number.isFinite(spec.speed)||Math.abs(spec.speed)>180)))throw Error(label+' needs finite start/end or speed (degrees per second).');
+   }
+   if(['mandelbrot','julia','burningship'].includes(s.generator)){
+    const point=p=>Array.isArray(p)&&p.length===2&&p.every(Number.isFinite);
+    if(!point(s.center)&&!(s.center&&point(s.center.from)&&point(s.center.to)))throw Error('Fractal center needs [real, imaginary] or {from:[...],to:[...]}.');
+    if(!s.zoom||!Number.isFinite(s.zoom.from)||!Number.isFinite(s.zoom.to)||s.zoom.from<1e-12||s.zoom.to<1e-12)throw Error('Fractal zoom needs positive from/to spans (minimum 1e-12).');
+    if(s.iterations!==undefined){let values=typeof s.iterations==='number'?[s.iterations]:[s.iterations?.from,s.iterations?.to];if(!values.every(v=>Number.isInteger(v)&&v>=20&&v<=5000))throw Error('Fractal iterations must be 20–5000, or {from,to} in that range.');}
+    if(s.quality!==undefined&&(!Number.isInteger(s.quality)||s.quality<128||s.quality>512))throw Error('Fractal quality must be 128–512.');
+    if(s.vibrance!==undefined&&(!Number.isFinite(s.vibrance)||s.vibrance<0||s.vibrance>1))throw Error('Fractal vibrance must be 0–1.');
+    if(s.generator==='julia'&&!point(s.parameter))throw Error('Julia parameter needs [real, imaginary] numbers.');
+   }
+   if(s.generator==='lorenz'){
+    for(const [key,max] of [['sigma',30],['rho',60],['beta',10]])if(s[key]!==undefined&&(!Number.isFinite(s[key])||s[key]<=0||s[key]>max))throw Error(key+' must be above 0 and at most '+max+'.');
+    if(s.trail!==undefined&&(!Number.isFinite(s.trail)||s.trail<2||s.trail>60))throw Error('trail must be 2–60 seconds.');
+    if(s.rate!==undefined&&s.rate>3)throw Error('Lorenz rate must be at most 3.');
+    if(s.epsilon!==undefined&&(!Number.isFinite(s.epsilon)||s.epsilon<0||s.epsilon>1))throw Error('epsilon must be 0–1.');
+    if(s.scale!==undefined&&(!Number.isFinite(s.scale)||s.scale<5||s.scale>20))throw Error('scale must be 5–20.');
+   }
+  }
+  else if(s.effect==='scene'){
+   if(!s.scene||typeof s.scene.background!=='string'||!Array.isArray(s.scene.objects))throw Error('Scene '+(i+1)+' needs a background and objects array.');
+   for(let o of s.scene.objects){if(typeof o.image!=='string'||!Array.isArray(o.box)||o.box.length!==4||!o.box.every(Number.isFinite)||o.box[2]<=0||o.box[3]<=0)throw Error('Scene '+(i+1)+' needs object image and [x,y,width,height] box.');if(!['spin','still','explode'].includes(o.motion))throw Error('Unknown object motion on segment '+(i+1));}
+  }else if(typeof s.image!=='string'||!s.image)throw Error('Segment '+(i+1)+' needs an image.');
+  if(!Number.isInteger(s.seed||0))throw Error('seed must be an integer.');
+  if(s.intensity!==undefined&&(!Number.isFinite(s.intensity)||s.intensity<0||s.intensity>1))throw Error('intensity must be 0–1.');
+  if(s.transition!==undefined&&(!Number.isFinite(s.transition)||s.transition<0))throw Error('transition must be nonnegative.');prev=s.time
+ });return d}
+function hash(a){let n=Math.sin(a*127.1+78.233)*43758.5453;return n-Math.floor(n)}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
+function fit(img){let scale=Math.min(W/img.width,H/img.height);return {x:(W-img.width*scale)/2,y:(H-img.height*scale)/2,w:img.width*scale,h:img.height*scale}}
+function drawBase(im){if(!im)return;let f=fit(im);ctx.drawImage(im,f.x,f.y,f.w,f.h)}
+// Small deterministic recipes: no image assets or stored frames.
+const lifeCache=new WeakMap();
+const palettes={aurora:['#6cf0c2','#7ad9f6','#de8cf7','#ffd495'],ember:['#ffaf69','#ff696f','#ffd7a0','#a581ed'],ocean:['#76e5ec','#6e9bff','#b3f4dd','#dea6ee'],neon:['#ff63bd','#70e8ff','#e5ff79','#ffa35d']};
+function backdrop(palette,phase){
+ const c=palette[0],g=ctx.createRadialGradient(400+Math.sin(phase*.3)*100,350,50,400,400,650);
+ g.addColorStop(0,'#1d2135');g.addColorStop(1,'#080a14');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+}
+function lifeInitial(s,n){let cells=new Uint8Array(n*n),density=s.density??.32,seed=s.seed||1;
+ for(let i=0;i<cells.length;i++)cells[i]=hash(i*17+seed*31)<density?1:0;return cells}
+function lifeNext(cells,n,step,seed){let next=new Uint8Array(cells.length);
+ for(let y=0;y<n;y++)for(let x=0;x<n;x++){
+  let left=(x+n-1)%n,right=(x+1)%n,up=(y+n-1)%n,down=(y+1)%n;
+  let count=cells[up*n+left]+cells[up*n+x]+cells[up*n+right]+cells[y*n+left]+cells[y*n+right]+cells[down*n+left]+cells[down*n+x]+cells[down*n+right];
+  let i=y*n+x;next[i]=count===3||(cells[i]&&count===2)?1:0;
+ }
+ // Occasional seeded new colonies prevent a long composition from dying away.
+ if(step%24===0){let gx=4+Math.floor(hash(seed*3+step)* (n-8)),gy=4+Math.floor(hash(seed*7+step)*(n-8));
+  for(const [dx,dy] of [[1,0],[2,1],[0,2],[1,2],[2,2]])next[(gy+dy)*n+gx+dx]=1;
+ }
+ return next}
+function lifeState(s,step){let n=s.grid??76,cache=lifeCache.get(s);if(!cache){cache={n,states:new Map([[0,lifeInitial(s,n)]])};lifeCache.set(s,cache)}
+ let start=Math.floor(step/12)*12;while(!cache.states.has(start)){let k=Math.max(...cache.states.keys()),c=cache.states.get(k);for(let i=k+1;i<=k+12;i++)c=lifeNext(c,n,i,s.seed||1);cache.states.set(k+12,c)}
+ let c=cache.states.get(start);for(let i=start+1;i<=step;i++)c=lifeNext(c,n,i,s.seed||1);return c}
+function drawLife(s,age,palette){let n=s.grid??76,step=Math.floor(age*(s.rate??8)),cells=lifeState(s,step),size=W/n,colors=[[],[],[],[]];
+ for(let i=0;i<cells.length;i++)if(cells[i])colors[(Math.floor(i/n/8)+Math.floor(i%n/8)+Math.floor(step/9))%4].push(i);
+ ctx.save();ctx.shadowBlur=9;for(let k=0;k<4;k++){ctx.beginPath();for(let i of colors[k])ctx.rect((i%n)*size+.8,Math.floor(i/n)*size+.8,size-1.4,size-1.4);ctx.fillStyle=palette[k];ctx.shadowColor=palette[k];ctx.fill()}
+ ctx.restore()}
+function drawFractal(s,age,palette){let depth=s.depth??10,spread=s.spread??.47,turn=Math.sin(age*.31+(s.seed||0))*.16;
+ ctx.save();ctx.translate(400,675);ctx.rotate(Math.sin(age*.16)*.15);ctx.lineCap='round';ctx.globalCompositeOperation='screen';
+ const groups=Array.from({length:depth},()=>[]);
+ function branch(x,y,len,angle,d){if(d<=0)return;let nx=x+Math.cos(angle)*len,ny=y+Math.sin(angle)*len;groups[depth-d].push([x,y,nx,ny]);let a=spread+turn*Math.sin((depth-d)*.65+age*.2);branch(nx,ny,len*.735,angle-a,d-1);branch(nx,ny,len*.735,angle+a,d-1)}
+ branch(0,0,176,-Math.PI/2,depth);
+ for(let i=0;i<depth;i++){ctx.beginPath();for(let a of groups[i]){ctx.moveTo(a[0],a[1]);ctx.lineTo(a[2],a[3])}ctx.lineWidth=Math.max(.85,10*Math.pow(.78,i));ctx.strokeStyle=palette[i%4];ctx.shadowColor=palette[i%4];ctx.shadowBlur=11;ctx.globalAlpha=.96-i/depth*.35;ctx.stroke()}
+ ctx.restore()}
+function drawHarmonics(s,age,palette){let count=s.points??1000,seed=s.seed||0,phase=age*.23+seed*.17,turns=s.turns??4;
+ ctx.save();ctx.translate(400,400);ctx.rotate(age*.045);ctx.globalCompositeOperation='screen';
+ for(let layer=0;layer<3;layer++){ctx.beginPath();for(let i=0;i<=count;i++){
+  let t=i/count*Math.PI*2*turns,rad=210+92*Math.sin(t*3+phase+layer*.55);
+  let x=Math.sin(t*2+phase*.5)*rad+100*Math.cos(t*5-phase*.7+layer*.15);
+  let y=Math.cos(t*3-phase*.35)*rad+75*Math.sin(t*7+phase*.6);
+  i?ctx.lineTo(x,y):ctx.moveTo(x,y)
+ }ctx.lineWidth=layer===0?3.5:2.5;ctx.globalAlpha=.98-layer*.12;ctx.strokeStyle=palette[layer];ctx.shadowColor=palette[layer];ctx.shadowBlur=15;ctx.stroke()}
+ ctx.restore()}
+function drawKaleido(s,age,palette){let folds=s.folds??12,phase=age*.38+(s.seed||0)*.2;
+ ctx.save();ctx.translate(400,400);ctx.globalCompositeOperation='screen';
+ for(let k=0;k<folds;k++){ctx.save();ctx.rotate(k*2*Math.PI/folds+phase*.12);if(k%2)ctx.scale(1,-1);
+  for(let j=0;j<7;j++){let r=40+j*42,spread=(.18+Math.sin(phase+j*.75)*.09),len=36+27*Math.sin(phase*.7+j);
+   ctx.beginPath();ctx.moveTo(r,0);ctx.quadraticCurveTo(r+len,spread*r,r+len*1.7,0);ctx.quadraticCurveTo(r+len,-spread*r,r,0);
+   ctx.fillStyle=palette[(k+j)%4];ctx.globalAlpha=.3+j*.033;ctx.fill();ctx.strokeStyle=palette[(k+j+1)%4];ctx.globalAlpha=.88;ctx.lineWidth=2.1;ctx.stroke()
+  }ctx.restore()}
+ ctx.restore()}
+// Three nearby solutions of the Lorenz system. Trajectories are cached in memory,
+// while each displayed frame is selected solely by track time and the JSON recipe.
+const lorenzCache=new WeakMap();
+function lorenzDerivative(v,sigma,rho,beta){return [sigma*(v[1]-v[0]),v[0]*(rho-v[2])-v[1],v[0]*v[1]-beta*v[2]]}
+function lorenzStep(v,dt,sigma,rho,beta){
+ const a=lorenzDerivative(v,sigma,rho,beta);
+ const b=lorenzDerivative(v.map((x,i)=>x+a[i]*dt/2),sigma,rho,beta);
+ const c=lorenzDerivative(v.map((x,i)=>x+b[i]*dt/2),sigma,rho,beta);
+ const d=lorenzDerivative(v.map((x,i)=>x+c[i]*dt),sigma,rho,beta);
+ return v.map((x,i)=>x+dt*(a[i]+2*b[i]+2*c[i]+d[i])/6)
+}
+function lorenzData(s,index){let data=lorenzCache.get(s),dt=.0125,sigma=s.sigma??10,rho=s.rho??28,beta=s.beta??(8/3);
+ if(!data){let seed=s.seed||1,epsilon=s.epsilon??.004,trail=Math.round((s.trail??26)/dt);
+  let base=[.12+hash(seed)*.13,.13+hash(seed*3)*.14,.14+hash(seed*7)*.15];
+  let strands=[0,1,2].map(k=>({state:[base[0]+k*epsilon,base[1]-k*epsilon,base[2]+k*epsilon*.5],points:[]}));
+  for(let strand of strands){for(let j=0;j<800;j++)strand.state=lorenzStep(strand.state,dt,sigma,rho,beta);
+   for(let j=0;j<trail;j++){strand.state=lorenzStep(strand.state,dt,sigma,rho,beta);strand.points.push(...strand.state)}}
+  data={strands,trail};lorenzCache.set(s,data)
+ }
+ // Append only the samples needed at the requested time. Seeking backward uses cached samples.
+ for(let strand of data.strands)while(strand.points.length/3<=index){strand.state=lorenzStep(strand.state,dt,sigma,rho,beta);strand.points.push(...strand.state)}
+ return data
+}
+function drawLorenz(s,age,progress,palette){const dt=.0125,rate=s.rate??1,index=Math.floor(age*rate/dt);
+ const data=lorenzData(s,index+Math.round((s.trail??26)/dt));
+ const target=data.trail-1+index,start=Math.max(0,target-data.trail+1);
+ const yaw=s.camera?.yaw!==undefined?angleAt(s.camera.yaw,age,progress)*Math.PI/180:.18+.28*Math.sin(age*.055);
+ const pitch=s.camera?.pitch!==undefined?angleAt(s.camera.pitch,age,progress)*Math.PI/180:.1+.13*Math.sin(age*.082);
+ const cy=Math.cos(yaw),sy=Math.sin(yaw),cp=Math.cos(pitch),sp=Math.sin(pitch),scale=s.scale??12.8;
+ function project(points,i){let x=points[i*3],y=points[i*3+1],z=points[i*3+2];let h=x*cy+y*sy,depth=y*cy-x*sy;return [400+h*scale,415-(z-25)*scale*cp+depth*scale*sp]}
+ ctx.save();ctx.globalCompositeOperation='screen';ctx.lineJoin='round';ctx.lineCap='round';
+ for(let strandIndex=0;strandIndex<data.strands.length;strandIndex++){
+  let points=data.strands[strandIndex].points,color=palette[strandIndex];
+  for(let band=0;band<8;band++){
+   let a=start+Math.floor((target-start)*band/8),b=start+Math.floor((target-start)*(band+1)/8);
+   ctx.beginPath();let first=project(points,a);ctx.moveTo(first[0],first[1]);
+   for(let j=a+2;j<=b;j+=2){let q=project(points,j);ctx.lineTo(q[0],q[1])}
+   let last=project(points,b);ctx.lineTo(last[0],last[1]);
+   ctx.strokeStyle=color;ctx.globalAlpha=.12+band*.105;ctx.lineWidth=1.1+band*.25;
+   ctx.shadowColor=color;ctx.shadowBlur=band>5?10:0;ctx.stroke()
+  }
+  let point=project(points,target);ctx.globalAlpha=.95;ctx.shadowColor=color;ctx.shadowBlur=18;ctx.fillStyle=color;ctx.beginPath();ctx.arc(point[0],point[1],4.2,0,Math.PI*2);ctx.fill()
+ }
+ ctx.restore()
+}
+
+// Escape-time images are computed off the UI thread; the last image is scaled between updates.
+const mandelStates=new WeakMap(),mandelActive=new Set();let mandelLast=null;
+function mandelCompute(p){
+ const {width:w,height:h,cx,cy,span,iterations:max,palette,seed,kind,parameter,vibrance=0}=p;
+ const pixels=new Uint8ClampedArray(w*h*4),unit=span/w,phase=(seed%997)*.001;
+ for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+  let px=cx+(x+.5-w/2)*unit,py=cy-(y+.5-h/2)*unit;
+  let cr=kind==='julia'?parameter[0]:px,ci=kind==='julia'?parameter[1]:py;
+  let xr=cr-.25,q=xr*xr+ci*ci,inside=kind==='mandelbrot'&&(q*(q+xr)<=.25*ci*ci||(cr+1)*(cr+1)+ci*ci<=.0625);
+  let zr=kind==='julia'?px:0,zi=kind==='julia'?py:0,n=0,mag=0;
+  if(!inside){for(;n<max;n++){
+   let zr2=zr*zr,zi2=zi*zi;mag=zr2+zi2;if(mag>256)break;
+   zi=kind==='burningship'?2*Math.abs(zr*zi)+ci:2*zr*zi+ci;zr=zr2-zi2+cr
+  }}else n=max;
+  let k=(y*w+x)*4;
+  if(n===max){pixels[k]=5;pixels[k+1]=7;pixels[k+2]=17}
+  else{
+   let smooth=n+1-Math.log2(Math.max(1,Math.log2(Math.sqrt(mag))));
+   let v=smooth*.042+phase,base=Math.floor(v),fraction=v-base;
+   let a=palette[((base%4)+4)%4],b=palette[(((base+1)%4)+4)%4];
+   let f=fraction*fraction*(3-2*fraction),shade=.66+.34*Math.min(1,n/30);
+   let r=a[0]*(1-f)+b[0]*f,g=a[1]*(1-f)+b[1]*f,bl=a[2]*(1-f)+b[2]*f;
+   if(vibrance){let mid=(Math.max(r,g,bl)+Math.min(r,g,bl))/2-18*vibrance,boost=1+1.8*vibrance;
+    r=Math.max(0,Math.min(255,mid+(r-mid)*boost));
+    g=Math.max(0,Math.min(255,mid+(g-mid)*boost));
+    bl=Math.max(0,Math.min(255,mid+(bl-mid)*boost))
+   }
+   pixels[k]=shade*r;pixels[k+1]=shade*g;pixels[k+2]=shade*bl
+  }pixels[k+3]=255
+ }
+ return pixels
+}
+function mandelPalette(palette){return palette.map(hex=>[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16)))}
+function mandelState(s){let state=mandelStates.get(s);if(state)return state;
+ let canvas=document.createElement('canvas'),w=s.quality??256;canvas.width=w;canvas.height=w;
+ state={canvas,context:canvas.getContext('2d'),worker:null,busy:false,desired:null,rendered:null,lastRequestAt:-Infinity,serial:0};
+ try{let source='const compute='+mandelCompute.toString()+';self.onmessage=e=>{const pixels=compute(e.data);self.postMessage({serial:e.data.serial,width:e.data.width,pixels:pixels.buffer},[pixels.buffer])}';
+  let url=URL.createObjectURL(new Blob([source],{type:'text/javascript'}));state.worker=new Worker(url);URL.revokeObjectURL(url);
+  state.worker.onmessage=e=>finishMandel(s,state,e.data.serial,new Uint8ClampedArray(e.data.pixels),e.data.width)
+ }catch(_){state.worker=null}
+ mandelStates.set(s,state);mandelActive.add(state);return state
+}
+function finishMandel(s,state,id,pixels,width){
+ if(id!==state.serial)return;let img=state.context.createImageData(width,width);img.data.set(pixels);state.context.putImageData(img,0,0);
+ state.rendered=state.sent;state.busy=false;
+ mandelLast={canvas:state.canvas,rendered:state.rendered};
+ if(config.segments.includes(s))render(position)
+}
+function resetMandelStates(){for(const state of mandelActive)state.worker?.terminate();mandelActive.clear();mandelLast=null}
+function requestMandel(s,state,p){
+ state.busy=true;state.sent=p;state.lastRequestAt=performance.now();let id=++state.serial;
+ if(state.worker)state.worker.postMessage({...p,serial:id});
+ else setTimeout(()=>{let pixels=mandelCompute(p);finishMandel(s,state,id,pixels,p.width)},0)
+}
+function drawEscapeFractal(s,progress,palette){
+ let state=mandelState(s),start=Array.isArray(s.center)?s.center:s.center.from,end=Array.isArray(s.center)?s.center:s.center.to;
+ let cx=start[0]+(end[0]-start[0])*progress,cy=start[1]+(end[1]-start[1])*progress;
+ let from=s.zoom?.from??3.2,to=s.zoom?.to??.0032,span=from*Math.pow(to/from,progress);
+ let iter=s.iterations??200,iterations=typeof iter==='number'?iter:Math.round(iter.from+(iter.to-iter.from)*progress);
+ let p={width:state.canvas.width,height:state.canvas.height,cx,cy,span,iterations,palette:mandelPalette(palette),seed:s.seed??1,kind:s.generator,parameter:s.parameter,vibrance:s.vibrance??0};
+ state.desired=p;let last=state.rendered,display=last?{canvas:state.canvas,rendered:last}:mandelLast;
+ if(display){let old=display.rendered,sourceSize=display.canvas.width*span/old.span;
+  let sx=display.canvas.width/2+(cx-old.cx)*display.canvas.width/old.span-sourceSize/2;
+  let sy=display.canvas.height/2-(cy-old.cy)*display.canvas.height/old.span-sourceSize/2;
+  // A large seek can reduce the crop to less than one source pixel. Hold the
+  // previous frame until the worker supplies a useful image at the new scale.
+  ctx.imageSmoothingEnabled=true;
+  if(sourceSize<1||sourceSize>display.canvas.width*2||sx>display.canvas.width||sy>display.canvas.height||sx+sourceSize<0||sy+sourceSize<0)ctx.drawImage(display.canvas,0,0,display.canvas.width,display.canvas.height,0,0,W,H);
+  else ctx.drawImage(display.canvas,sx,sy,sourceSize,sourceSize,0,0,W,H)
+ }
+ let difference=!last||Math.abs(Math.log(span/last.span))>(playing?.055:1e-5)||cx!==last.cx||cy!==last.cy||p.iterations!==last.iterations;
+ if(difference&&!state.busy&&performance.now()-state.lastRequestAt>90)requestMandel(s,state,p)
+}
+
+function angleAt(spec,age,progress){if(typeof spec==='number')return spec;let start=spec?.start??0;return spec?.speed!==undefined?start+spec.speed*age:start+((spec?.end??start)-start)*progress}
+function drawProcedural(s,t){let age=Math.max(0,t-s.time),palette=palettes[s.palette]||palettes.aurora;
+ let end=config.segments[config.segments.indexOf(s)+1]?.time??config.duration;
+ let progress=clamp(age/Math.max(.001,end-s.time),0,1);
+ ctx.save();backdrop(palette,age);
+ if(s.rotation!==undefined){ctx.translate(W/2,H/2);ctx.rotate(angleAt(s.rotation,age,progress)*Math.PI/180);ctx.translate(-W/2,-H/2)}
+ if(s.generator==='life')drawLife(s,age,palette);
+ else if(s.generator==='fractal')drawFractal(s,age,palette);
+ else if(s.generator==='harmonics')drawHarmonics(s,age,palette);
+ else if(s.generator==='kaleido')drawKaleido(s,age,palette);
+ else if(s.generator==='lorenz')drawLorenz(s,age,progress,palette);
+ else if(['mandelbrot','julia','burningship'].includes(s.generator))drawEscapeFractal(s,progress,palette);
+ ctx.restore()}
+
+function drawScene(s,t){
+ const sc=s.scene, duration=(config.segments[config.segments.indexOf(s)+1]?.time??config.duration)-s.time;
+ const age=Math.max(0,t-s.time),p=clamp(age/duration,0,1),seed=s.seed||0;
+ const background=getImage(sc.background);if(background)drawBase(background);
+ else{ctx.fillStyle='#24232b';ctx.fillRect(0,0,W,H)}
+ if(sc.atmosphere==='field'){
+  ctx.save();ctx.globalCompositeOperation='screen';for(let k=0;k<8;k++){
+   ctx.beginPath();let rx=155+k*23+Math.sin(age*1.3+k+seed)*8,ry=rx*.59;
+   ctx.ellipse(400,405,rx,ry,0,0,2*Math.PI);ctx.strokeStyle='rgba(140,198,224,.22)';ctx.lineWidth=2;ctx.stroke()
+  }ctx.restore()
+ }
+ if(sc.atmosphere==='fire'||sc.atmosphere==='smoke')drawCombustion(age,p,seed,sc.atmosphere==='smoke');
+ for(const o of sc.objects){const im=getImage(o.image);if(!im)continue;let [x,y,w,h]=o.box.map((v,i)=>v*(i%2?H:W));
+  if(o.motion==='spin'){
+   ctx.save();ctx.translate(x+w/2,y+h/2);ctx.rotate(2*Math.PI*(o.turns??1)*p);ctx.drawImage(im,-w/2,-h/2,w,h);ctx.restore();
+  }else if(o.motion==='explode'){
+   // Each source tile follows a fixed trajectory set by the seed. No state accumulates between frames.
+   const rows=9,cols=7,tw=w/cols,th=h/rows;
+   for(let row=0;row<rows;row++)for(let col=0;col<cols;col++){
+    let n=row*cols+col,r1=hash(seed+n*11),r2=hash(seed+n*17+3);
+    let delay=r1*.17,q=clamp((p-delay)/(1-delay),0,1),angle=Math.atan2(row-(rows-1)/2,col-(cols-1)/2)+(r2-.5)*.6;
+    let travel=(o.power??1)*(q*95+q*q*360)*(0.5+r1*.9);
+    ctx.save();ctx.globalAlpha=1-clamp((q-.6)/.4,0,1);
+    ctx.translate(x+(col+.5)*tw+Math.cos(angle)*travel,y+(row+.5)*th+Math.sin(angle)*travel+q*q*130);
+    ctx.rotate((r2-.5)*q*2.6);
+    ctx.drawImage(im,col/cols*im.width,row/rows*im.height,im.width/cols,im.height/rows,-tw/2,-th/2,tw+.4,th+.4);ctx.restore();
+   }
+  }else ctx.drawImage(im,x,y,w,h)
+ }
+}
+function drawCombustion(age,p,seed,smokeOnly){
+ ctx.save();let plume=smokeOnly?clamp(age/3,0,1):clamp(age/2.2,0,1);
+ if(!smokeOnly){ctx.globalCompositeOperation='screen';for(let k=0;k<14;k++){
+  let a=k*2*Math.PI/14,rad=(95+hash(k+seed)*55)*Math.sin(Math.PI*clamp(p*1.5,0,1));
+  ctx.beginPath();ctx.moveTo(400+Math.cos(a)*25,420+Math.sin(a)*25);
+  ctx.lineTo(400+Math.cos(a+.12)*rad,420+Math.sin(a+.12)*rad);
+  ctx.lineTo(400+Math.cos(a+.24)*45,420+Math.sin(a+.24)*45);
+  ctx.closePath();ctx.fillStyle=k%2?'rgba(255,118,43,.52)':'rgba(255,208,103,.58)';ctx.fill()
+ }}
+ ctx.globalCompositeOperation='source-over';for(let i=0;i<28;i++){
+  let x=400+(hash(seed+i*5)-.5)*300+Math.sin(age*.7+i)*35;
+  let y=400+(hash(seed+i*13)-.5)*150-age*(14+hash(i+seed)*27);
+  let r=(18+hash(seed+i*19)*52)*plume;
+  ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fillStyle='rgba(160,145,143,'+(.035+hash(i+seed)*.06)*plume+')';ctx.fill()
+ }ctx.restore()
+}
+function effect(s,t){if(s.effect==='procedural'){drawProcedural(s,t);return}if(s.effect==='scene'){drawScene(s,t);return}const im=getImage(s.image),intensity=s.intensity??.65,speed=s.motion??1,seed=s.seed??0,phase=(t-s.time)*speed;ctx.save();ctx.globalAlpha=1;
+ if(!im){ctx.fillStyle='#23212b';ctx.fillRect(0,0,W,H);ctx.fillStyle='#e3d3bf';ctx.font='24px system-ui';ctx.textAlign='center';ctx.fillText('Loading image…',W/2,H/2);ctx.restore();return}
+ let f=fit(im);
+ if(s.effect==='ripple'){
+   let bands=48,step=H/bands;for(let j=0;j<bands;j++){let y=j*step;let dx=Math.sin(j*.47+phase*2+seed)*18*intensity+Math.sin(j*.13-phase*1.2)*11*intensity;let sy=(y-f.y)/f.h*im.height,sh=step/f.h*im.height;if(sy>=0&&sy<im.height){ctx.drawImage(im,0,Math.max(0,sy),im.width,Math.min(im.height-Math.max(0,sy),sh+1),f.x+dx,y,f.w,step+1)}}
+ }else if(s.effect==='fracture'){
+   let n=8,size=W/n;for(let y=0;y<n;y++)for(let x=0;x<n;x++){let delay=hash(x*13+y*31+seed)*1.5,p=clamp((phase-delay)/3.8,0,1),push=p*p*intensity*70,angle=hash(x*21+y*17+seed)*Math.PI*2;ctx.save();ctx.translate(x*size+size/2+Math.cos(angle)*push,y*size+size/2+Math.sin(angle)*push);ctx.rotate((hash(x*7+y*19+seed)-.5)*p*.22);ctx.drawImage(im,(x*size-f.x)/f.w*im.width,(y*size-f.y)/f.h*im.height,size/f.w*im.width,size/f.h*im.height,-size/2,-size/2,size+1,size+1);ctx.restore()}
+ }else{drawBase(im)}
+ if(s.effect==='field'){
+   ctx.globalCompositeOperation='screen';for(let k=0;k<11;k++){let radius=105+k*27+Math.sin(phase*1.3+k*.9+seed)*9*intensity;ctx.beginPath();for(let j=0;j<=100;j++){let a=j/100*Math.PI*2;let r=radius+Math.sin(a*5-phase*2+k+seed)*12*intensity;let px=400+Math.cos(a)*r*1.18,py=410+Math.sin(a)*r*.64;j?ctx.lineTo(px,py):ctx.moveTo(px,py)}ctx.strokeStyle=k%2?'rgba(237,178,120,.27)':'rgba(155,210,239,.23)';ctx.lineWidth=2.4;ctx.stroke()}
+ }
+ if(s.effect==='embers'||s.effect==='fracture'){
+   ctx.globalCompositeOperation='screen';let count=s.effect==='embers'?115:40;for(let i=0;i<count;i++){let xx=hash(i*3+seed),yy=hash(i*7+seed),v=.055+hash(i*11+seed)*.16,cy=((yy-(phase*v)%1)+1)%1,px=xx*W+Math.sin(phase*1.3+i)*25*intensity;let rad=(1+hash(i*19+seed)*4)*intensity;ctx.beginPath();ctx.arc(px,cy*H,rad,0,Math.PI*2);ctx.fillStyle=i%3?'rgba(255,177,93,.7)':'rgba(255,227,173,.82)';ctx.fill()}
+ }
+ ctx.restore()}
+function locate(t){let i=0;for(let k=1;k<config.segments.length;k++){if(t>=config.segments[k].time)i=k;else break}return i}
+function render(t){ctx.fillStyle='#15161d';ctx.fillRect(0,0,W,H);let i=locate(t),s=config.segments[i],fade=Math.min(s.transition||0,i? s.time-config.segments[i-1].time:0);if(i>0&&fade>0&&t<s.time+fade){let p=clamp((t-s.time)/fade,0,1);effect(config.segments[i-1],t);ctx.save();ctx.globalAlpha=p; // render next effect into an isolated buffer so clearing and blending cannot erase the previous image
+ bufferCtx.clearRect(0,0,W,H);let main=ctx;ctx=bufferCtx;effect(s,t);ctx=main;ctx.drawImage(buffer,0,0);ctx.restore()}else effect(s,t);
+ $('segment').textContent=(i+1)+' / '+config.segments.length+' · '+(s.effect==='procedural'?s.generator:s.effect);let d=config.duration;$('clock').textContent=fmt(t)+' / '+fmt(d);$('seek').value=String(clamp(t,0,d))}
+// Offscreen crossfade keeps effect compositing inside each layer.
+const buffer=document.createElement('canvas');buffer.width=W;buffer.height=H;const bufferCtx=buffer.getContext('2d');
+function fmt(n){n=Math.floor(n||0);return Math.floor(n/60)+':'+String(n%60).padStart(2,'0')}
+function markers(){let box=$('markers');box.replaceChildren();for(let s of config.segments){let el=document.createElement('span');el.className='mark';el.style.left=(s.time/config.duration*100)+'%';let action='';if(['mandelbrot','julia','burningship'].includes(s.generator)){let z=s.zoom;action=(z.to<z.from?' · zoom in':z.to>z.from?' · zoom out':'')+(Array.isArray(s.center)?'':' · pan')}el.title=fmt(s.time)+' · '+(s.generator||s.effect)+action;box.appendChild(el)}}
+function clock(){return clamp(anchor+(performance.now()-anchorTime)/1000,0,config.duration)}
+function setPlaying(v){playing=v;$('play').textContent=v?'❚❚ Pause':'▶ Play';$('play').disabled=false}
+function stopStartProbe(){if(startProbeTimer)clearInterval(startProbeTimer);startProbeTimer=null;lastProbeMs=null}
+function activateAudio(ms){
+ if(!playRequested&&!playing)return;
+ stopStartProbe();playRequested=false;
+ if(Number.isFinite(ms)&&ms>=0)position=clamp(ms/1000,0,config.duration);
+ anchor=position;anchorTime=performance.now();setPlaying(true);setStatus('Playing');render(position)
+}
+function observeAudioPosition(ms){
+ if(!playRequested||playing||!Number.isFinite(ms)||ms<0)return;
+ if(lastProbeMs!==null&&ms-lastProbeMs>=70){activateAudio(ms);return}
+ lastProbeMs=ms
+}
+function startAudioProbe(){
+ stopStartProbe();probeStartedAt=performance.now();const id=serial;
+ startProbeTimer=setInterval(()=>{
+  if(id!==serial||!playRequested||playing||!widgetReady){stopStartProbe();return}
+  widget.getPosition(ms=>{if(id===serial)observeAudioPosition(ms)});
+  if(performance.now()-probeStartedAt>5000)setStatus('Waiting for SoundCloud playback position…')
+ },180)
+}
+function seek(t){position=clamp(t,0,config.duration);anchor=position;anchorTime=performance.now();ended=false;if(widgetReady&&config.soundcloud)widget.seekTo(Math.round(position*1000));render(position)}
+function stop(){position=clock();setPlaying(false);if(widgetReady&&config.soundcloud)widget.pause();render(position)}
+function initSoundCloud(){if(!config.soundcloud)return;if(!window.SC?.Widget){config.soundcloud=null;setStatus('SoundCloud unavailable. Playing visuals only.',true);return}let id=++serial;widgetReady=false;widget=null;waiting=true;$('play').disabled=true;$('play').textContent='Loading track…';setStatus('Loading SoundCloud track…');$('sc').src='https://w.soundcloud.com/player/?url='+encodeURIComponent(config.soundcloud)+'&auto_play=false';let w=SC.Widget($('sc'));widget=w;
+ w.bind(SC.Widget.Events.READY,()=>{if(id!==serial)return;widgetReady=true;waiting=false;setPlaying(false);setStatus('SoundCloud loaded. Tap Play to start.');w.getDuration(ms=>{if(id!==serial)return;if(Number.isFinite(ms)&&ms>0){config.duration=ms/1000;$('seek').max=String(config.duration);markers();render(position)}})});
+ w.bind(SC.Widget.Events.PLAY,()=>{if(id===serial)activateAudio()});
+ w.bind(SC.Widget.Events.PLAY_PROGRESS,e=>{if(id===serial)observeAudioPosition(e?.currentPosition)});
+ w.bind(SC.Widget.Events.PAUSE,()=>{if(id!==serial||playRequested&&!playing)return;if(playing)position=clock();playRequested=false;stopStartProbe();setPlaying(false);setStatus('Paused')});
+ w.bind(SC.Widget.Events.FINISH,()=>{if(id!==serial)return;playRequested=false;stopStartProbe();position=config.duration;setPlaying(false);ended=true;render(position);setStatus('Track finished')});
+ w.bind(SC.Widget.Events.ERROR,()=>{if(id!==serial)return;playRequested=false;stopStartProbe();config.soundcloud=null;setPlaying(false);setStatus('SoundCloud unavailable. Playing visuals only.',true)});
+}
+function apply(d){validate(d);resetMandelStates();playRequested=false;stopStartProbe();if(widget){try{widget.pause()}catch(_){}widget=null}++serial;config=d;position=0;anchor=0;anchorTime=performance.now();setPlaying(false);$('seek').max=String(config.duration);$('editor').value=JSON.stringify(config,null,2);markers();for(let s of config.segments){if(s.effect==='procedural'){}else if(s.effect==='scene'){getImage(s.scene.background);s.scene.objects.forEach(o=>getImage(o.image))}else getImage(s.image)}render(0);if(config.soundcloud)initSoundCloud();else{widgetReady=false;$('sc').src='about:blank';setStatus('Timeline ready. Press Play.')}}
+$('play').onclick=()=>{if(config.soundcloud){if(!widgetReady){setStatus('SoundCloud is still loading.');return}if(playing){playRequested=false;stopStartProbe();widget.pause();return}if(ended){widget.seekTo(0);position=0;ended=false}playRequested=true;setStatus('Starting track…');startAudioProbe();widget.play();return}if(playing){stop();return}if(position>=config.duration)seek(0);anchor=position;anchorTime=performance.now();setPlaying(true);setStatus('Playing')};
+$('seek').addEventListener('input',e=>seek(Number(e.target.value)));
+$('apply').onclick=()=>{try{apply(JSON.parse($('editor').value))}catch(e){setStatus(e.message,true)}};
+$('sample').onclick=()=>apply(structuredClone(defaultConfig));
+$('jsonFile').onchange=async e=>{let f=e.target.files[0];if(!f)return;try{apply(JSON.parse(await f.text()))}catch(err){setStatus('JSON: '+err.message,true)}e.target.value=''};
+$('images').onchange=e=>{for(let f of e.target.files){if(!f.type.startsWith('image/'))continue;if(files.has(f.name))URL.revokeObjectURL(files.get(f.name));files.set(f.name,URL.createObjectURL(f))}sources.clear();failed.clear();config.segments.forEach(s=>{if(s.effect==='procedural'){}else if(s.effect==='scene'){getImage(s.scene.background);s.scene.objects.forEach(o=>getImage(o.image))}else getImage(s.image)});setStatus(files.size+' image file(s) available by filename.');e.target.value=''};
+$('download').onclick=()=>{let b=new Blob([JSON.stringify(config,null,2)+'\n'],{type:'application/json'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download='animate.json';a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)};
+function frame(now){if(playing){if(config.soundcloud){if(widgetReady&&now-lastPoll>180){lastPoll=now;widget.getPosition(ms=>{if(!playing||!Number.isFinite(ms))return;let actual=ms/1000;if(Math.abs(actual-clock())>.13){anchor=actual;anchorTime=performance.now()}})}position=clock()}else{position=clock();if(position>=config.duration){setPlaying(false);setStatus('Finished')}}render(position)}requestAnimationFrame(frame)}
+apply(structuredClone(defaultConfig));requestAnimationFrame(frame);
+</script></body></html>
