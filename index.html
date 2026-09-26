@@ -5,15 +5,12 @@
 /* Presentation surface: one visible control beneath the artwork. */
 body{background:#090b13}main{max-width:none;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:18px}canvas{width:min(92vw,72vh,880px);margin:0;box-shadow:0 18px 75px #000a}.panel{width:auto;max-width:none;margin:18px 0 0}.panel>.row:first-child{justify-content:center}#play{font-size:1.1rem;min-width:160px;padding:.8rem 1.35rem}header,#seek,#clock,#markers,.panel>.row:not(:first-child),#status,details,.hint{display:none}#build-id{position:fixed;right:12px;bottom:10px;color:#8d94a5;font-size:11px;letter-spacing:.02em;z-index:2}
 </style>
-<!-- Cloudflare Web Analytics -->
-<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token":"b67aa68ad00248e59c56b9b84fd9a9cd"}'></script>
-<!-- End Cloudflare Web Analytics -->
 </head><body><main><header><h1>Animate</h1><span>0.7 · Vivid Julia</span></header>
 <canvas id="stage" width="800" height="800" aria-label="Animated artwork"></canvas>
 <div class="panel"><div class="row"><button id="play" class="primary">▶ Play</button><input id="seek" aria-label="Seek" type="range" min="0" max="360" step="0.01" value="0"><span id="clock">0:00 / 0:36</span></div><div id="markers" class="markers"></div><div class="row"><label class="file">Load JSON<input id="jsonFile" type="file" accept=".json,application/json"></label><label class="file">Add images<input id="images" type="file" accept="image/*" multiple></label><button id="sample">Demo</button><button id="download">Save JSON</button><span id="segment" class="hint"></span></div><p id="status" role="status">Built-in demo ready. Press Play.</p>
 <details><summary>Edit timeline JSON</summary><textarea id="editor" spellcheck="false" aria-label="Timeline JSON"></textarea><div class="row"><button id="apply">Apply JSON</button><span class="hint">Edit markers, images, effects and seeds; then apply.</span></div></details>
 <p class="hint">Procedural generators: life, fractal, harmonics, kaleido, lorenz, mandelbrot, julia, burningship. Fractal segments support vibrance from 0 to 1; scrub to explore.</p></div>
-<div class="soundcloud"><iframe id="sc" title="SoundCloud audio player" allow="autoplay" src="about:blank"></iframe></div><small id="build-id">Animate demo r4 · 2026-09-25</small></main>
+<div class="soundcloud"><iframe id="sc" title="SoundCloud audio player" allow="autoplay" src="about:blank"></iframe></div><small id="build-id">Animate demo r5 · 2026-09-25</small></main>
 <script src="https://w.soundcloud.com/player/api.js"></script>
 <script>
 'use strict';
@@ -386,4 +383,7 @@ $('images').onchange=e=>{for(let f of e.target.files){if(!f.type.startsWith('ima
 $('download').onclick=()=>{let b=new Blob([JSON.stringify(config,null,2)+'\n'],{type:'application/json'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download='animate.json';a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)};
 function frame(now){if(playing){if(config.soundcloud){if(widgetReady&&now-lastPoll>180){lastPoll=now;widget.getPosition(ms=>{if(!playing||!Number.isFinite(ms))return;let actual=ms/1000;if(Math.abs(actual-clock())>.13){anchor=actual;anchorTime=performance.now()}})}position=clock()}else{position=clock();if(position>=config.duration){setPlaying(false);setStatus('Finished')}}render(position)}requestAnimationFrame(frame)}
 apply(structuredClone(defaultConfig));requestAnimationFrame(frame);
-</script></body></html>
+</script><!-- Cloudflare Web Analytics -->
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token":"b67aa68ad00248e59c56b9b84fd9a9cd"}'></script>
+<!-- End Cloudflare Web Analytics -->
+</body></html>
