@@ -8,4 +8,4 @@ The source timeline is also provided as `julia-vivid-voyage.json` for inspection
 
 The demo is a presentation view of the Animate engine. For the timeline editor and other procedural modes, use the full Animate app.
 
-On iPhone, the visible SoundCloud player supplies the Play control so the first tap goes directly to the audio iframe. The animation starts when SoundCloud reports playback. Other browsers retain the single demo button.
+On iPhone, the page retains its single Play button. It sends the start request during the touch gesture and checks that SoundCloud playback position advances before starting the animation. If startup stalls, it retries the widget request. SoundCloud playback still depends on its embedded player and iOS policy.
