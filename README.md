@@ -1,9 +1,11 @@
-# Julia Voyage — Animate demo
+# Fractal Journey
 
-A standalone, one-page visual demo. Open `index.html` in a browser or place it at the root of a GitHub Pages repository. The screen shows the artwork and one Play/Pause button.
+A colourful Julia fractal animation accompanying [Fractal Journey](https://soundcloud.com/hewmorist/fractal-journey) by Hewmorist.
 
-The 4:19 Julia timeline and Hewmorist’s Fractal Journey track are built into `index.html`, so there is no build step or image asset folder. The browser calculates the fractal frames while the track plays. If SoundCloud cannot load, the same button runs the visual timeline silently.
+Open the page and press Play. Fixed Ultra 800 × 800 graphics with GPU
+calculation; no quality or calculation switches. GPU failures stay visible.
+A browser supporting WebGL2 is required. GPU calculation uses a worker
+where supported, or page WebGL2 otherwise; there is no CPU fallback.
 
-The source timeline is also provided as `julia-vivid-voyage.json` for inspection and editing in the full Animate 0.7 app. The demo has its own embedded copy of that JSON; editing the separate file alone does not change the page. To publish a revised show, export it from the full app and update `defaultConfig` in `index.html`.
-
-The demo is a presentation view of the Animate engine. For the timeline editor and other procedural modes, use the full Animate app.
+GitHub Pages: select branch `hi-def-gpu`, folder `/ (root)`.
+No build command is needed. Revision `fj-release-1` appears bottom right.
